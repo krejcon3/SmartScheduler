@@ -26,9 +26,9 @@ public class Main {
 
         // Generate TAL schedule
         Subject TAL = new Subject("TAL", new Lecture(Item.TUESDAY, 2, 3));
-        TAL.addExercise(new Exercise(Item.MONDAY, 1, 2));
-        TAL.addExercise(new Exercise(Item.MONDAY, 3, 2));
-        TAL.addExercise(new Exercise(Item.MONDAY, 5, 2));
+        TAL.addExercise(new Exercise(Item.THURSDAY, 1, 2));
+        TAL.addExercise(new Exercise(Item.THURSDAY, 3, 2));
+        TAL.addExercise(new Exercise(Item.THURSDAY, 5, 2));
         subjects.add(TAL);
 
         // Generate KO schedule
@@ -64,8 +64,9 @@ public class Main {
         Solver solver = new Solver(subjects);
 
         try {
-            //solver.setStrictLevel(Solver.STRICT_EXERCISES);
-            solver.solve();
+            Schedule schedule = solver.solve();
+            Printer printer = new Printer();
+            printer.print(schedule, "./schedule.html");
         } catch (SmartScheduleException e) {
             System.out.println(e.getMessage());
         }

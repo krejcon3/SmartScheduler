@@ -20,7 +20,7 @@ public class Solver {
         this.schedule = new Schedule();
     }
 
-    public void solve() throws SmartScheduleException {
+    public Schedule solve() throws SmartScheduleException {
         int schedulingTable[][] = new int[5][14];
 
         for (Subject subject : this.subjects) {
@@ -51,6 +51,7 @@ public class Solver {
             }
             System.out.println();
         }
+        return this.schedule;
     }
 
     private int[][] checkExercises(int schedulingTable[][], int index) throws SmartScheduleException {

@@ -19,4 +19,8 @@ public class Schedule {
         this.items.remove(this.items.size() - 1);
         return item;
     }
+
+    public ArrayList<Item> getItems() {
+        return items;
+    }
 }
