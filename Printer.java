@@ -76,7 +76,7 @@ public class Printer {
             StreamResult result = new StreamResult(new File(file));
 
             transformer.transform(source, result);
-            System.out.println("Done!");
+            System.out.println("File saved!");
         } catch (TransformerConfigurationException e) {
             System.out.println(e.getMessage());
         } catch (TransformerException e) {

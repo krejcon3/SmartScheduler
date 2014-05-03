@@ -5,17 +5,14 @@ import java.util.ArrayList;
  */
 public class Solver {
 
-    public static final int STRICT_NONE = 0;
-    public static final int STRICT_EXERCISE_COVERS_LECTURE = 1;
-    public static final int STRICT_LECTURE_COVERS_LECTURE = 3;
-    public static final int STRICT_LECTURE_COVERS_LIMITATION = 4;
-    public static final int STRICT_ALL = 2;
+    private boolean lectureCoversLimitation = false;
+    private boolean lectureCoversLecture = false;
+    private boolean exerciseCoversLecture = false;
 
     public static final int WEEK_LENGTH = 5;
     public static final int DAY_LENGTH = 15;
 
     private ArrayList<Subject> subjects;
-    private int strictLevel;
     private Schedule schedule;
     private ArrayList<Integer> disallowedDays;
     private int earliestItem = 0;
@@ -23,7 +20,6 @@ public class Solver {
 
     public Solver(ArrayList<Subject> subjects) {
         this.subjects = subjects;
-        this.strictLevel = STRICT_ALL;
         this.schedule = new Schedule();
         this.disallowedDays = new ArrayList<Integer>();
     }
@@ -64,7 +60,7 @@ public class Solver {
 
         this.generateLectureSchedule(schedulingTable);
 
-        if (this.strictLevel == STRICT_EXERCISE_COVERS_LECTURE) {
+        if (this.exerciseCoversLecture) {
             schedulingTable = new int[Solver.WEEK_LENGTH][Solver.DAY_LENGTH + 1];
             if (this.disallowedDays.size() > 0) {
                 this.applyDisallowedDays(schedulingTable);
@@ -109,62 +105,25 @@ public class Solver {
         return schedulingTable;
     }
 
-    private boolean checkLectureStrictLevel() {
-        switch (this.strictLevel) {
-            case STRICT_ALL:
-                return true;
-            case STRICT_LECTURE_COVERS_LECTURE:
-                return false;
-            case STRICT_EXERCISE_COVERS_LECTURE:
-                return true;
-            case STRICT_NONE:
-                return false;
-            case STRICT_LECTURE_COVERS_LIMITATION:
-                return true;
-            default:
-                return false;
-        }
-    }
-
     private int[][] generateLectureSchedule(int[][] schedulingTable) throws SmartScheduleException {
         for (Subject subject : this.subjects) {
             Lecture lecture = subject.getLecture();
             for (int i = 0; i < lecture.getLength(); i++) {
-                if (schedulingTable[lecture.getDay()][lecture.getStart() + i] > 0 && this.checkLectureStrictLevel()) {
+                if (schedulingTable[lecture.getDay()][lecture.getStart() + i] > 0 && (!this.lectureCoversLecture)) {
                     throw new SmartScheduleException("Schedule not exist, covering lectures found.");
-                } else if (schedulingTable[lecture.getDay()][lecture.getStart() + i] < 0 && this.strictLevel != STRICT_LECTURE_COVERS_LIMITATION) {
+                } else if (schedulingTable[lecture.getDay()][lecture.getStart() + i] < 0 && (!this.lectureCoversLimitation)) {
                     throw new SmartScheduleException("Schedule not exist, covering lectures found.");
                 }
-                if (schedulingTable[lecture.getDay()][lecture.getStart() + i] < 0) {
-                    schedulingTable[lecture.getDay()][lecture.getStart() + i] = 0;
-                }
-                schedulingTable[lecture.getDay()][lecture.getStart() + i]++;
+                schedulingTable[lecture.getDay()][lecture.getStart() + i] = 1;
             }
             this.schedule.addItem(lecture);
         }
         return schedulingTable;
     }
 
-    private boolean checkExerciseStrictLevel() {
-        switch (this.strictLevel) {
-            case STRICT_ALL:
-                return true;
-            case STRICT_LECTURE_COVERS_LECTURE:
-                return true;
-            case STRICT_EXERCISE_COVERS_LECTURE:
-                return false;
-            case STRICT_NONE:
-                return false;
-            case STRICT_LECTURE_COVERS_LIMITATION:
-                return true;
-            default:
-                return false;
-        }
-    }
-
     private int[][] generateExerciseSchedule(int[][] schedulingTable) throws SmartScheduleException {
         try {
-            schedulingTable = this.checkExercises(schedulingTable, 0);
+            schedulingTable = this.checkExercises(schedulingTable.clone(), 0);
         } catch (SmartScheduleException e) {
             throw new SmartScheduleException("Schedule not exist, covering exercises found.");
         }
@@ -176,7 +135,11 @@ public class Solver {
         for (Exercise exercise : subject.getExercises()) {
             boolean collision = false;
             for (int i = 0; i < exercise.getLength(); i++) {
-                if (schedulingTable[exercise.getDay()][exercise.getStart() + i] != 0 && this.checkExerciseStrictLevel()) {
+                if (schedulingTable[exercise.getDay()][exercise.getStart() + i] == 1 && (!this.exerciseCoversLecture)) {
+                    collision = true;
+                } else if (schedulingTable[exercise.getDay()][exercise.getStart() + i] < 0) {
+                    collision = true;
+                } else if (schedulingTable[exercise.getDay()][exercise.getStart() + i] == 2) {
                     collision = true;
                 }
             }
@@ -184,7 +147,7 @@ public class Solver {
                 continue;
             }
             for (int i = 0; i < exercise.getLength(); i++) {
-                schedulingTable[exercise.getDay()][exercise.getStart() + i]++;
+                schedulingTable[exercise.getDay()][exercise.getStart() + i] = 2;
             }
             this.schedule.addItem(exercise);
             try {
@@ -204,17 +167,15 @@ public class Solver {
         throw new SmartScheduleException("No possible schedule in this branch.");
     }
 
-    public void setStrictLevel(int strictLevel) throws SmartScheduleException {
-        switch (strictLevel) {
-            case STRICT_NONE:
-            case STRICT_EXERCISE_COVERS_LECTURE:
-            case STRICT_ALL:
-            case STRICT_LECTURE_COVERS_LECTURE:
-            case STRICT_LECTURE_COVERS_LIMITATION:
-                this.strictLevel = strictLevel;
-                break;
-            default:
-                throw new SmartScheduleException("Invalid argument: " + strictLevel);
-        }
+    public void allowLectureCoversLimitation() {
+        this.lectureCoversLimitation = true;
+    }
+
+    public void allowLectureCoversLecture() {
+        this.lectureCoversLecture = true;
+    }
+
+    public void allowExerciseCoversLecture() {
+        this.exerciseCoversLecture = true;
     }
 }

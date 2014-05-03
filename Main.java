@@ -65,15 +65,15 @@ public class Main {
         Printer printer = new Printer();
 
         try {
-            solver.setStrictLevel(Solver.STRICT_LECTURE_COVERS_LIMITATION);
-            solver.forbidDay(Day.TUESDAY);
-            solver.setEarliestItem(5);
+            solver.allowLectureCoversLimitation();
+            solver.allowExerciseCoversLecture();
             solver.setLatestItem(12);
+            solver.setEarliestItem(5);
             Schedule schedule = solver.solve();
             printer.print(schedule, "./schedule.html");
         } catch (SmartScheduleException e) {
-            printer.print(e, "./schedule.html");
             System.out.println(e.getMessage());
+            printer.print(e, "./schedule.html");
         }
     }
 }
