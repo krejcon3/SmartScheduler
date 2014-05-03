@@ -38,8 +38,23 @@ public class Printer {
 
         Document document = documentBuilder.newDocument();
 
+        Element html = document.createElement("html");
+        document.appendChild(html);
+
+        Element head = document.createElement("head");
+        html.appendChild(head);
+
+        Element css = document.createElement("link");
+        css.setAttribute("rel", "stylesheet");
+        css.setAttribute("type", "text/css");
+        css.setAttribute("href", "./src/style.css");
+        head.appendChild(css);
+
+        Element body = document.createElement("body");
+        html.appendChild(body);
+
         Element table = document.createElement("table");
-        document.appendChild(table);
+        body.appendChild(table);
 
         Element tHead = document.createElement("thead");
         table.appendChild(tHead);
@@ -47,7 +62,11 @@ public class Printer {
         Element tr = document.createElement("tr");
         tHead.appendChild(tr);
 
-        for (int i = 1; i < 17; i++) {
+        Element thn = document.createElement("th");
+        thn.appendChild(document.createTextNode(""));
+        tr.appendChild(thn);
+
+        for (int i = 1; i < prepareSchedule[0].length; i++) {
             Element th = document.createElement("th");
             th.appendChild(document.createTextNode(i + ""));
             tr.appendChild(th);
@@ -56,11 +75,39 @@ public class Printer {
         Element tBody = document.createElement("tbody");
         table.appendChild(tBody);
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < prepareSchedule.length; i++) {
             Element trb = document.createElement("tr");
             tBody.appendChild(trb);
 
-            for (int j = 1; j < 20; j++) {
+            Element tday = document.createElement("td");
+            String dayName = "";
+            switch (i + 1) {
+                case Item.MONDAY:
+                    dayName = "Monday";
+                    break;
+                case Item.TUESDAY:
+                    dayName = "Tuesday";
+                    break;
+                case Item.WEDNESDAY:
+                    dayName = "Wednesday";
+                    break;
+                case Item.THURSDAY:
+                    dayName = "Thursday";
+                    break;
+                case Item.FRIDAY:
+                    dayName = "Friday";
+                    break;
+                case Item.SATURDAY:
+                    dayName = "Saturday";
+                    break;
+                case Item.SUNDAY:
+                    dayName = "Sunday";
+                    break;
+            }
+            tday.appendChild(document.createTextNode(dayName));
+            trb.appendChild(tday);
+
+            for (int j = 1; j < prepareSchedule[i].length; j++) {
 
                 Element td = document.createElement("td");
 

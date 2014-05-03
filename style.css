@@ -1,0 +1,23 @@
+th {
+    background-color: lightgray;
+    border: 1px solid black;
+}
+
+table {
+    border: 2px solid black;
+}
+
+td {
+    border: 1px solid gray;
+    background-color: palegreen;
+}
+
+
+td:empty {
+    background-color: white;
+}
+
+tr > td:first-child {
+    background-color: lightgray;
+    border: 1px solid black;
+}
