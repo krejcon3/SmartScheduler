@@ -65,7 +65,7 @@ public class Main {
         Printer printer = new Printer();
 
         try {
-            solver.setStrictLevel(Solver.STRICT_EXERCISES);
+            solver.setStrictLevel(Solver.STRICT_EXERCISE_COVERS_LECTURE);
             solver.forbidDay(Day.FRIDAY);
             solver.setEarliestItem(4);
             solver.setLatestItem(10);

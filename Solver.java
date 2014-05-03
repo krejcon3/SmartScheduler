@@ -6,7 +6,8 @@ import java.util.ArrayList;
 public class Solver {
 
     public static final int STRICT_NONE = 0;
-    public static final int STRICT_EXERCISES = 1;
+    public static final int STRICT_EXERCISE_COVERS_LECTURE = 1;
+    public static final int STRICT_LECTURE_COVERS_LECTURE = 3;
     public static final int STRICT_ALL = 2;
 
     public static final int WEEK_LENGTH = 5;
@@ -62,7 +63,7 @@ public class Solver {
 
         this.generateLectureSchedule(schedulingTable);
 
-        if (this.strictLevel != STRICT_ALL) {
+        if (this.strictLevel == STRICT_EXERCISE_COVERS_LECTURE) {
             schedulingTable = new int[Solver.WEEK_LENGTH][Solver.DAY_LENGTH + 1];
             if (this.disallowedDays.size() > 0) {
                 this.applyDisallowedDays(schedulingTable);
@@ -110,8 +111,6 @@ public class Solver {
         for (Subject subject : this.subjects) {
             Lecture lecture = subject.getLecture();
             for (int i = 0; i < lecture.getLength(); i++) {
-
-                // STRICT ALL
                 if (schedulingTable[lecture.getDay()][lecture.getStart() + i] > 0 && this.strictLevel == STRICT_ALL) {
                     throw new SmartScheduleException("Schedule not exist, covering lectures found.");
                 }
@@ -167,8 +166,9 @@ public class Solver {
     public void setStrictLevel(int strictLevel) throws SmartScheduleException {
         switch (strictLevel) {
             case STRICT_NONE:
-            case STRICT_EXERCISES:
+            case STRICT_EXERCISE_COVERS_LECTURE:
             case STRICT_ALL:
+            case STRICT_LECTURE_COVERS_LECTURE:
                 this.strictLevel = strictLevel;
                 break;
             default:
