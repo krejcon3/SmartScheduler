@@ -23,6 +23,18 @@ public class Solver {
     public Schedule solve() throws SmartScheduleException {
         int schedulingTable[][] = new int[5][14];
 
+        schedulingTable = this.generateLectureSchedule(schedulingTable);
+
+        if (this.strictLevel != STRICT_ALL) {
+            schedulingTable = new int[5][14];
+        }
+
+        schedulingTable = this.generateExerciseSchedule(schedulingTable);
+
+        return this.schedule;
+    }
+
+    private int[][] generateLectureSchedule(int[][] schedulingTable) throws SmartScheduleException {
         for (Subject subject : this.subjects) {
             Lecture lecture = subject.getLecture();
             for (int i = 0; i < lecture.getLength(); i++) {
@@ -35,23 +47,16 @@ public class Solver {
             }
             this.schedule.addItem(lecture);
         }
+        return schedulingTable;
+    }
 
-        if (this.strictLevel != STRICT_ALL) {
-            schedulingTable = new int[5][14];
-        }
+    private int[][] generateExerciseSchedule(int[][] schedulingTable) throws SmartScheduleException {
         try {
             schedulingTable = this.checkExercises(schedulingTable, 0);
         } catch (SmartScheduleException e) {
             throw new SmartScheduleException("Schedule not exist, covering exercises found.");
         }
-
-        for (int[] row : schedulingTable) {
-            for (int i : row) {
-                System.out.print(i + " ");
-            }
-            System.out.println();
-        }
-        return this.schedule;
+        return schedulingTable;
     }
 
     private int[][] checkExercises(int schedulingTable[][], int index) throws SmartScheduleException {
