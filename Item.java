@@ -2,14 +2,6 @@
  * Created by krejcir on 29.4.14.
  */
 public abstract class Item {
-    public static final int MONDAY = 1;
-    public static final int TUESDAY = 2;
-    public static final int WEDNESDAY = 3;
-    public static final int THURSDAY = 4;
-    public static final int FRIDAY = 5;
-    public static final int SATURDAY = 6;
-    public static final int SUNDAY = 7;
-
     public int day;
     private int start;
     private int length;
@@ -31,13 +23,13 @@ public abstract class Item {
 
     public void setDay(int day) throws SmartScheduleException {
         switch (day) {
-            case MONDAY:
-            case TUESDAY:
-            case WEDNESDAY:
-            case THURSDAY:
-            case FRIDAY:
-            case SATURDAY:
-            case SUNDAY:
+            case Day.MONDAY:
+            case Day.TUESDAY:
+            case Day.WEDNESDAY:
+            case Day.THURSDAY:
+            case Day.FRIDAY:
+            case Day.SATURDAY:
+            case Day.SUNDAY:
                 this.day = day;
                 break;
             default:

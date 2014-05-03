@@ -8,12 +8,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -38,105 +36,33 @@ public class Printer {
 
         Document document = documentBuilder.newDocument();
 
-        Element html = document.createElement("html");
-        document.appendChild(html);
+        Element body = this.buildHtmlPage(document);
 
-        Element head = document.createElement("head");
-        html.appendChild(head);
+        body.appendChild(this.buildTable(document, prepareSchedule));
 
-        Element css = document.createElement("link");
-        css.setAttribute("rel", "stylesheet");
-        css.setAttribute("type", "text/css");
-        css.setAttribute("href", "./src/style.css");
-        head.appendChild(css);
+        this.write(document, file);
+    }
 
-        Element body = document.createElement("body");
-        html.appendChild(body);
+    public void print(SmartScheduleException e, String file) {
+        Document document = documentBuilder.newDocument();
 
-        Element table = document.createElement("table");
-        body.appendChild(table);
+        Element body = this.buildHtmlPage(document);
 
-        Element tHead = document.createElement("thead");
-        table.appendChild(tHead);
+        Element h1 = document.createElement("h1");
+        h1.appendChild(document.createTextNode(e.getMessage()));
+        body.appendChild(h1);
 
-        Element tr = document.createElement("tr");
-        tHead.appendChild(tr);
-
-        Element thn = document.createElement("th");
-        thn.appendChild(document.createTextNode(""));
-        tr.appendChild(thn);
-
-        for (int i = 1; i < prepareSchedule[0].length; i++) {
-            Element th = document.createElement("th");
-            th.appendChild(document.createTextNode(i + ""));
-            tr.appendChild(th);
-        }
-
-        Element tBody = document.createElement("tbody");
-        table.appendChild(tBody);
-
-        for (int i = 0; i < prepareSchedule.length; i++) {
-            Element trb = document.createElement("tr");
-            tBody.appendChild(trb);
-
-            Element tday = document.createElement("td");
-            String dayName = "";
-            switch (i + 1) {
-                case Item.MONDAY:
-                    dayName = "Monday";
-                    break;
-                case Item.TUESDAY:
-                    dayName = "Tuesday";
-                    break;
-                case Item.WEDNESDAY:
-                    dayName = "Wednesday";
-                    break;
-                case Item.THURSDAY:
-                    dayName = "Thursday";
-                    break;
-                case Item.FRIDAY:
-                    dayName = "Friday";
-                    break;
-                case Item.SATURDAY:
-                    dayName = "Saturday";
-                    break;
-                case Item.SUNDAY:
-                    dayName = "Sunday";
-                    break;
-            }
-            tday.appendChild(document.createTextNode(dayName));
-            trb.appendChild(tday);
-
-            for (int j = 1; j < prepareSchedule[i].length; j++) {
-
-                Element td = document.createElement("td");
-
-                Item item = prepareSchedule[i][j];
-                if (prepareSchedule[i][j] != null) {
-                    if (item.getStart() <= j && j <= item.getStart() + item.getLength()) {
-                        if (item instanceof Exercise) {
-                            td.appendChild(document.createTextNode(item.getSubjectName()));
-                        } else if (item instanceof Lecture) {
-                            Element bold = document.createElement("b");
-                            bold.appendChild(document.createTextNode(item.getSubjectName()));
-                            td.appendChild(bold);
-                        }
-                    }
-                }
-                trb.appendChild(td);
-            }
-        }
         this.write(document, file);
     }
 
     private Item[][] prepareSchedule(Schedule schedule) {
         ArrayList<Item> items = schedule.getItems();
 
-        Item[][] table = new Item[7][20];
+        Item[][] table = new Item[Solver.WEEK_LENGTH][Solver.DAY_LENGTH + 1];
 
         for (Item item : items) {
             for (int i = 0; i < item.getLength(); i++) {
-                table[item.getDay() - 1][item.getStart() + i] = item;
+                table[item.getDay()][item.getStart() + i] = item;
             }
         }
         return table;
@@ -157,5 +83,100 @@ public class Printer {
             System.out.println(e.getMessage());
         }
 
+    }
+
+    private Element buildHtmlPage(Document document) {
+        Element html = document.createElement("html");
+        document.appendChild(html);
+
+        Element head = document.createElement("head");
+        html.appendChild(head);
+
+        Element css = document.createElement("link");
+        css.setAttribute("rel", "stylesheet");
+        css.setAttribute("type", "text/css");
+        css.setAttribute("href", "./src/style.css");
+        head.appendChild(css);
+
+        Element body = document.createElement("body");
+        html.appendChild(body);
+
+        return body;
+    }
+
+    private Element buildTable(Document document, Item[][] prepareSchedule) {
+        Element table = document.createElement("table");
+
+        Element tHead = document.createElement("thead");
+        table.appendChild(tHead);
+
+        Element tr = document.createElement("tr");
+        tHead.appendChild(tr);
+
+        Element thn = document.createElement("th");
+        thn.appendChild(document.createTextNode(""));
+        tr.appendChild(thn);
+
+        for (int i = 0; i < prepareSchedule[0].length; i++) {
+            Element th = document.createElement("th");
+            th.appendChild(document.createTextNode(i + ""));
+            tr.appendChild(th);
+        }
+
+        Element tBody = document.createElement("tbody");
+        table.appendChild(tBody);
+
+        for (int i = 0; i < prepareSchedule.length; i++) {
+            Element trb = document.createElement("tr");
+            tBody.appendChild(trb);
+
+            Element tday = document.createElement("td");
+            String dayName = "";
+            switch (i) {
+                case Day.MONDAY:
+                    dayName = "Monday";
+                    break;
+                case Day.TUESDAY:
+                    dayName = "Tuesday";
+                    break;
+                case Day.WEDNESDAY:
+                    dayName = "Wednesday";
+                    break;
+                case Day.THURSDAY:
+                    dayName = "Thursday";
+                    break;
+                case Day.FRIDAY:
+                    dayName = "Friday";
+                    break;
+                case Day.SATURDAY:
+                    dayName = "Saturday";
+                    break;
+                case Day.SUNDAY:
+                    dayName = "Sunday";
+                    break;
+            }
+            tday.appendChild(document.createTextNode(dayName));
+            trb.appendChild(tday);
+
+            for (int j = 0; j < prepareSchedule[i].length; j++) {
+
+                Element td = document.createElement("td");
+
+                Item item = prepareSchedule[i][j];
+                if (prepareSchedule[i][j] != null) {
+                    if (item.getStart() <= j && j <= item.getStart() + item.getLength()) {
+                        if (item instanceof Exercise) {
+                            td.appendChild(document.createTextNode(item.getSubjectName()));
+                        } else if (item instanceof Lecture) {
+                            Element bold = document.createElement("b");
+                            bold.appendChild(document.createTextNode(item.getSubjectName()));
+                            td.appendChild(bold);
+                        }
+                    }
+                }
+                trb.appendChild(td);
+            }
+        }
+        return table;
     }
 }

@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by krejcir on 29.4.14.
@@ -10,28 +9,101 @@ public class Solver {
     public static final int STRICT_EXERCISES = 1;
     public static final int STRICT_ALL = 2;
 
+    public static final int WEEK_LENGTH = 5;
+    public static final int DAY_LENGTH = 15;
+
     private ArrayList<Subject> subjects;
     private int strictLevel;
     private Schedule schedule;
+    private ArrayList<Integer> disallowedDays;
+    private int earliestItem = 0;
+    private int latestItem = Solver.DAY_LENGTH;
 
     public Solver(ArrayList<Subject> subjects) {
         this.subjects = subjects;
         this.strictLevel = STRICT_ALL;
         this.schedule = new Schedule();
+        this.disallowedDays = new ArrayList<Integer>();
+    }
+
+    public void forbidDay(int day) throws SmartScheduleException {
+        switch (day) {
+            case Day.MONDAY:
+            case Day.TUESDAY:
+            case Day.WEDNESDAY:
+            case Day.THURSDAY:
+            case Day.FRIDAY:
+            case Day.SATURDAY:
+            case Day.SUNDAY:
+                this.disallowedDays.add(day);
+                break;
+            default:
+                throw new SmartScheduleException("Undefined day of week.");
+        }
+    }
+
+    public void setEarliestItem(int earliestItem) {
+        this.earliestItem = earliestItem;
+    }
+
+    public void setLatestItem(int latestItem) {
+        this.latestItem = latestItem;
     }
 
     public Schedule solve() throws SmartScheduleException {
-        int schedulingTable[][] = new int[5][14];
+        int schedulingTable[][] = new int[Solver.WEEK_LENGTH][Solver.DAY_LENGTH + 1];
 
-        schedulingTable = this.generateLectureSchedule(schedulingTable);
-
-        if (this.strictLevel != STRICT_ALL) {
-            schedulingTable = new int[5][14];
+        if (this.disallowedDays.size() > 0) {
+            this.applyDisallowedDays(schedulingTable);
+        }
+        if (this.earliestItem > 0 || this.latestItem < Solver.DAY_LENGTH) {
+            this.applyDisallowedHours(schedulingTable);
         }
 
-        schedulingTable = this.generateExerciseSchedule(schedulingTable);
+        this.generateLectureSchedule(schedulingTable);
+
+        if (this.strictLevel != STRICT_ALL) {
+            schedulingTable = new int[Solver.WEEK_LENGTH][Solver.DAY_LENGTH + 1];
+            if (this.disallowedDays.size() > 0) {
+                this.applyDisallowedDays(schedulingTable);
+            }
+            if (this.earliestItem > 0 || this.latestItem < Solver.DAY_LENGTH) {
+                this.applyDisallowedHours(schedulingTable);
+            }
+        }
+
+        this.generateExerciseSchedule(schedulingTable);
 
         return this.schedule;
+    }
+
+    private void printMatrix(int[][] matrix) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                System.out.print(matrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    private int[][] applyDisallowedDays(int[][] schedulingTable) {
+        for (int day : this.disallowedDays) {
+            for (int i = 0; i < schedulingTable[day].length; i++) {
+                schedulingTable[day][i] = 1;
+            }
+        }
+        return schedulingTable;
+    }
+
+    private int[][] applyDisallowedHours(int[][] schedulingTable) {
+        for (int i = 0; i < schedulingTable.length; i++) {
+            for (int j = 0; j < schedulingTable[i].length; j++) {
+                if (j < this.earliestItem || j > this.latestItem) {
+                    schedulingTable[i][j] = 1;
+                }
+            }
+        }
+        return schedulingTable;
     }
 
     private int[][] generateLectureSchedule(int[][] schedulingTable) throws SmartScheduleException {
@@ -40,10 +112,10 @@ public class Solver {
             for (int i = 0; i < lecture.getLength(); i++) {
 
                 // STRICT ALL
-                if (schedulingTable[lecture.getDay() - 1][lecture.getStart() - 1 + i] > 0 && this.strictLevel == STRICT_ALL) {
+                if (schedulingTable[lecture.getDay()][lecture.getStart() + i] > 0 && this.strictLevel == STRICT_ALL) {
                     throw new SmartScheduleException("Schedule not exist, covering lectures found.");
                 }
-                schedulingTable[lecture.getDay() - 1][lecture.getStart() - 1 + i]++;
+                schedulingTable[lecture.getDay()][lecture.getStart() + i]++;
             }
             this.schedule.addItem(lecture);
         }
@@ -64,7 +136,7 @@ public class Solver {
         for (Exercise exercise : subject.getExercises()) {
             boolean collision = false;
             for (int i = 0; i < exercise.getLength(); i++) {
-                if (schedulingTable[exercise.getDay() - 1][exercise.getStart() - 1 + i] != 0) {
+                if (schedulingTable[exercise.getDay()][exercise.getStart() + i] != 0) {
                     collision = true;
                 }
             }
@@ -72,7 +144,7 @@ public class Solver {
                 continue;
             }
             for (int i = 0; i < exercise.getLength(); i++) {
-                schedulingTable[exercise.getDay() - 1][exercise.getStart() - 1 + i]++;
+                schedulingTable[exercise.getDay()][exercise.getStart() + i]++;
             }
             this.schedule.addItem(exercise);
             try {
@@ -84,7 +156,7 @@ public class Solver {
             } catch (SmartScheduleException e) {
                 this.schedule.popItem();
                 for (int i = 0; i < exercise.getLength(); i++) {
-                    schedulingTable[exercise.getDay() - 1][exercise.getStart() - 1 + i]--;
+                    schedulingTable[exercise.getDay()][exercise.getStart() + i]--;
                 }
                 continue;
             }
