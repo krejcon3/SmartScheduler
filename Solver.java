@@ -8,6 +8,7 @@ public class Solver {
     public static final int STRICT_NONE = 0;
     public static final int STRICT_EXERCISE_COVERS_LECTURE = 1;
     public static final int STRICT_LECTURE_COVERS_LECTURE = 3;
+    public static final int STRICT_LECTURE_COVERS_LIMITATION = 4;
     public static final int STRICT_ALL = 2;
 
     public static final int WEEK_LENGTH = 5;
@@ -85,12 +86,13 @@ public class Solver {
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     private int[][] applyDisallowedDays(int[][] schedulingTable) {
         for (int day : this.disallowedDays) {
             for (int i = 0; i < schedulingTable[day].length; i++) {
-                schedulingTable[day][i] = 1;
+                schedulingTable[day][i] = -1;
             }
         }
         return schedulingTable;
@@ -100,25 +102,64 @@ public class Solver {
         for (int i = 0; i < schedulingTable.length; i++) {
             for (int j = 0; j < schedulingTable[i].length; j++) {
                 if (j < this.earliestItem || j > this.latestItem) {
-                    schedulingTable[i][j] = 1;
+                    schedulingTable[i][j] = -1;
                 }
             }
         }
         return schedulingTable;
     }
 
+    private boolean checkLectureStrictLevel() {
+        switch (this.strictLevel) {
+            case STRICT_ALL:
+                return true;
+            case STRICT_LECTURE_COVERS_LECTURE:
+                return false;
+            case STRICT_EXERCISE_COVERS_LECTURE:
+                return true;
+            case STRICT_NONE:
+                return false;
+            case STRICT_LECTURE_COVERS_LIMITATION:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private int[][] generateLectureSchedule(int[][] schedulingTable) throws SmartScheduleException {
         for (Subject subject : this.subjects) {
             Lecture lecture = subject.getLecture();
             for (int i = 0; i < lecture.getLength(); i++) {
-                if (schedulingTable[lecture.getDay()][lecture.getStart() + i] > 0 && this.strictLevel == STRICT_ALL) {
+                if (schedulingTable[lecture.getDay()][lecture.getStart() + i] > 0 && this.checkLectureStrictLevel()) {
                     throw new SmartScheduleException("Schedule not exist, covering lectures found.");
+                } else if (schedulingTable[lecture.getDay()][lecture.getStart() + i] < 0 && this.strictLevel != STRICT_LECTURE_COVERS_LIMITATION) {
+                    throw new SmartScheduleException("Schedule not exist, covering lectures found.");
+                }
+                if (schedulingTable[lecture.getDay()][lecture.getStart() + i] < 0) {
+                    schedulingTable[lecture.getDay()][lecture.getStart() + i] = 0;
                 }
                 schedulingTable[lecture.getDay()][lecture.getStart() + i]++;
             }
             this.schedule.addItem(lecture);
         }
         return schedulingTable;
+    }
+
+    private boolean checkExerciseStrictLevel() {
+        switch (this.strictLevel) {
+            case STRICT_ALL:
+                return true;
+            case STRICT_LECTURE_COVERS_LECTURE:
+                return true;
+            case STRICT_EXERCISE_COVERS_LECTURE:
+                return false;
+            case STRICT_NONE:
+                return false;
+            case STRICT_LECTURE_COVERS_LIMITATION:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private int[][] generateExerciseSchedule(int[][] schedulingTable) throws SmartScheduleException {
@@ -135,7 +176,7 @@ public class Solver {
         for (Exercise exercise : subject.getExercises()) {
             boolean collision = false;
             for (int i = 0; i < exercise.getLength(); i++) {
-                if (schedulingTable[exercise.getDay()][exercise.getStart() + i] != 0) {
+                if (schedulingTable[exercise.getDay()][exercise.getStart() + i] != 0 && this.checkExerciseStrictLevel()) {
                     collision = true;
                 }
             }
@@ -169,6 +210,7 @@ public class Solver {
             case STRICT_EXERCISE_COVERS_LECTURE:
             case STRICT_ALL:
             case STRICT_LECTURE_COVERS_LECTURE:
+            case STRICT_LECTURE_COVERS_LIMITATION:
                 this.strictLevel = strictLevel;
                 break;
             default:

@@ -65,10 +65,10 @@ public class Main {
         Printer printer = new Printer();
 
         try {
-            solver.setStrictLevel(Solver.STRICT_EXERCISE_COVERS_LECTURE);
-            solver.forbidDay(Day.FRIDAY);
-            solver.setEarliestItem(4);
-            solver.setLatestItem(10);
+            solver.setStrictLevel(Solver.STRICT_LECTURE_COVERS_LIMITATION);
+            solver.forbidDay(Day.TUESDAY);
+            solver.setEarliestItem(5);
+            solver.setLatestItem(12);
             Schedule schedule = solver.solve();
             printer.print(schedule, "./schedule.html");
         } catch (SmartScheduleException e) {
