@@ -159,7 +159,7 @@ public class Solver {
             } catch (SmartScheduleException e) {
                 this.schedule.popItem();
                 for (int i = 0; i < exercise.getLength(); i++) {
-                    schedulingTable[exercise.getDay()][exercise.getStart() + i]--;
+                    schedulingTable[exercise.getDay()][exercise.getStart() + i] = 0;
                 }
                 continue;
             }
