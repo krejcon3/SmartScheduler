@@ -49,6 +49,8 @@ public class Solver {
     }
 
     public Schedule solve() throws SmartScheduleException {
+        long start = System.nanoTime();
+        System.out.println("START");
         int schedulingTable[][] = new int[Solver.WEEK_LENGTH][Solver.DAY_LENGTH + 1];
 
         if (this.disallowedDays.size() > 0) {
@@ -71,7 +73,8 @@ public class Solver {
         }
 
         this.generateExerciseSchedule(schedulingTable);
-
+        long end = System.nanoTime();
+        System.out.println("END: " + ((end/1000 - start/1000) / 1));
         return this.schedule;
     }
 
